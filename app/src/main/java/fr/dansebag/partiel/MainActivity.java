@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
                 if(username.getText().toString().isEmpty()){
                     username.setError("Veuillez saisir un nom d'utilisateur");
                 }else{
-                    SharedPreferences preferences = getSharedPreferences("PREFS", 0);
+                    SharedPreferences preferences = getSharedPreferences(MainActivity.class.getSimpleName(), MODE_PRIVATE);
                     @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("username", username.getText().toString());
                     editor.apply();
