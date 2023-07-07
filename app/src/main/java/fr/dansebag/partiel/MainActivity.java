@@ -3,18 +3,20 @@ package fr.dansebag.partiel;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private Button connexion;
     private EditText username;
+    private List<Users> users = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         connexion();
     }
 
-    public void messageAlertDialog(){
+    private void messageAlertDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Quitter l'application");
         builder.setMessage("Voulez-vous vraiment quitter l'application ?");
@@ -43,16 +45,52 @@ public class MainActivity extends AppCompatActivity {
                 if(username.getText().toString().isEmpty()){
                     username.setError("Veuillez saisir un nom d'utilisateur");
                 }else{
-                    SharedPreferences preferences = getSharedPreferences(MainActivity.class.getSimpleName(), MODE_PRIVATE);
-                    @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("username", username.getText().toString());
-                    editor.apply();
+
+                    if(checkUserIfExist(users, username.getText().toString())){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("Utilisateur déjà existant");
+                        builder.setMessage("Voulez-vous vraiment vous connecter ?");
+                        builder.setPositiveButton("Oui", (dialog, which) -> {
+
+                            ManageSharedPref manageSharedPref = new ManageSharedPref();
+                            Users user = new Users(username.getText().toString(), 0);
+                            users.add(user);
+                            manageSharedPref.save(users, MainActivity.this);
+
+                            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                            startActivity(intent);
+                            finish();
+                        });
+                        builder.setNegativeButton("Non", (dialog, which) -> {
+
+                            username.setError("Veuillez saisir un autre nom d'utilisateur");
+                            dialog.cancel();
+
+                        });
+                        builder.show();
+                        return;
+                    }
+
+                    ManageSharedPref manageSharedPref = new ManageSharedPref();
+                    Users user = new Users(username.getText().toString(), 0);
+                    users.add(user);
+                    manageSharedPref.save(users, MainActivity.this);
 
                     Intent intent = new Intent(MainActivity.this, HomeActivity.class);
                     startActivity(intent);
+                    finish();
                 }
             }
         });
+    }
+
+    public boolean checkUserIfExist(List<Users> users, String username) {
+        for (Users user : users) {
+            if (user.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
